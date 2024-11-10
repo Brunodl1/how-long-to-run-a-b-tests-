@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A/B Test Duration Calculator</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #3A9D43;
+            --gray: #797A7A;
+            --black: #000000;
+            --white: #f6f5f5;
+
+        }
+        body {
+            background: transparent;
+            font-family: roboto, sans-serif;
+            margin: 0;
+            color: var(--black);
+            overflow-x: hidden;
+        }
+
+        .container-ab-test {
+            margin: 10px;
+            box-sizing: border-box;
+            max-width: 100vw;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        #chartContainer {
+            max-width: 100%;
+            width: 100%;
+            background: var(--white);
+            color: var(--black);
+            border: 1px solid var(--gray);
+            border-radius: 5px;
+            margin-bottom: 20px;
+            height: 330px;
+            box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.6);  /* 20% opacity */
+
+        }
+
+        #chartContainer > h2 {
+            color: var(--black);
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .control-group {
+            color: var(--black);
+            border: 1px solid var(--gray);
+            position: relative;
+            background: var(--white);
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.6);  /* 20% opacity */
+
+        }
+
+        .help-icon {
+    position: relative;  /* Add this */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    background: #444;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 12px;
+    margin-left: 8px;
+    cursor: help;
+}
+
+.tooltip {
+    border: 1px solid var(--gray);
+    background-color: var(--white);
+    visibility: hidden;
+    position: absolute;
+    color: var(--gray);
+    padding: 10px;
+    border-radius: 5px;
+    width: 200px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-size: 14px;
+    line-height: 1.4;
+    z-index: 1000;
+    /* Position above the question mark */
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 10px;  /* Space between tooltip and question mark */
+}
+
+.tooltip::before {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 8px;
+    border-style: solid;
+    border-color: var(--gray) transparent transparent transparent;
+}
+
+        .help-icon:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+       /* Base slider styles */
+        input[type="range"] {
+            width: 100%;
+            background: transparent;
+            -webkit-appearance: none;
+            height: 2.2em;
+        }
+
+        /* Progress support */
+        input[type="range"].slider-progress {
+            --range: calc(var(--max) - var(--min));
+            --ratio: calc((var(--value) - var(--min)) / var(--range));
+            --sx: calc(0.5 * 2em + var(--ratio) * (100% - 2em));
+        }
+
+        /* Thumb styles */
+        input[type="range"].slider-progress::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 1.5em;
+            height: 1.5em;
+            border-radius: 1em;
+            background: var(--primary);
+            border: none;
+            box-shadow: 0 0 2px black;
+            margin-top: calc(max((1em - 1px - 1px) * 0.5,0px) - 2em * 0.5);
+            cursor: pointer;
+        }
+
+        /* Track styles */
+        input[type="range"].slider-progress::-webkit-slider-runnable-track {
+            height: 0.7em;
+            border: 1px solid #b2b2b2;
+            border-radius: 0.5em;
+            background: linear-gradient(var(--primary),var(--primary)) 0/var(--sx) 100% no-repeat, #EFEFEF;
+        }
+
+        /* Hover states */
+        input[type="range"].slider-progress::-webkit-slider-thumb:hover {
+            background: #35903E;
+        }
+
+        input[type="range"].slider-progress:hover::-webkit-slider-runnable-track {
+            border-color: #9A9A9A;
+            background: linear-gradient(var(--primary),var(--primary)) 0/var(--sx) 100% no-repeat, #e5e5e5;
+        }
+
+        /* Active states */
+        input[type="range"].slider-progress::-webkit-slider-thumb:active {
+            background: #35903E;
+        }
+
+        /* Firefox specific styles */
+        input[type="range"].slider-progress::-moz-range-thumb {
+            width: 1.5em;
+            height: 1.5em;
+            border-radius: 1em;
+            background: var(--primary);
+            border: none;
+            box-shadow: 0 0 2px black;
+            cursor: pointer;
+        }
+
+        input[type="range"].slider-progress::-moz-range-track {
+            height: 0.7em;
+            border: 1px solid #b2b2b2;
+            border-radius: 0.5em;
+            background: linear-gradient(var(--primary),var(--primary)) 0/var(--sx) 100% no-repeat, #EFEFEF;
+        }
+
+        input[type="range"].slider-progress:hover::-moz-range-track {
+            border-color: #9A9A9A;
+            background: linear-gradient(var(--primary),var(--primary)) 0/var(--sx) 100% no-repeat, #e5e5e5;
+        }
+
+        .value-display {
+            color: var(--primary);
+            font-weight: bold;
+        }
+        canvas {
+            max-width: 100% !important;
+            height: auto !important;
+        }
+
+        .chart-info {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+}
+
+.info-icon {
+    width: 24px;
+    height: 24px;
+    font-size: 14px;
+}
+
+.tooltip-left {
+    left: auto;
+    right: calc(100% + 15px);
+    top: 950%;
+    transform: translateY(-50%);
+    width: 300px;
+    height: 470px;
+}
+
+.tooltip-left::before {
+    content: '';
+    position: absolute;
+    top: 6%;
+    left: 100%;
+    transform: translateY(-50%);
+    border-width: 8px;
+    border-style: solid;
+    border-color: transparent transparent transparent var(--gray);
+}
+
+        /* Desktop styles */
+        @media (min-width: 768px) {
+            .controls {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            #chartContainer {
+                width: 100%;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                flex-direction: column;
+                height: 400px;
+                padding-bottom: 30px;
+            }
+            #chartContainer > h2 {
+            margin-top: 50px;
+            }
+
+            .tooltip {
+                width: 250px;
+                bottom: auto;
+                left: calc(100% + 15px);
+                top: -800px;
+                transform: none;
+            }
+
+            .tooltip::before {
+                top: 20px;
+                left: auto;
+                right: 100%;
+                transform: none;
+                border-color: transparent var(--primary) transparent transparent;
+            }
+            .chart-info {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+}
+
+.info-icon {
+    width: 24px;
+    height: 24px;
+    font-size: 14px;
+}
+
+/* Update these tooltip styles */
+.tooltip-left {
+    left: auto;
+    right: calc(100% + 15px);  /* Position to the left of the icon */
+    top: 750%;
+    transform: translateY(-50%);
+    width: 500px;
+    height: auto;
+}
+
+.tooltip-left::before {
+    content: '';
+    position: absolute;
+    top: 6%;
+    left: 100%;  /* Arrow starts from right edge */
+    transform: translateY(-50%);
+    border-width: 8px;
+    border-style: solid;
+    border-color: transparent transparent transparent var(--gray);  /* Arrow points right */
+}
+        }
+
+        /* Regular help tooltips (for input fields) */
+        .help-icon .field-tooltip {
+            border: 1px solid var(--gray);
+            background-color: var(--white);
+            visibility: hidden;
+            position: absolute;
+            color: var(--black);
+            padding: 10px;
+            border-radius: 5px;
+            width: 200px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 14px;
+            line-height: 1.4;
+            z-index: 1000;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-bottom: 10px;
+        }
+
+        .help-icon .field-tooltip::before {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 8px;
+            border-style: solid;
+            border-color: var(--gray) transparent transparent transparent;
+        }
+
+        .help-icon:hover .field-tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .chart-info {
+            margin-bottom: 20px;
+        }
+
+        /* Info tooltip (top-right corner) */
+        .chart-info .info-tooltip {
+            border: 1px solid var(--gray);
+            background-color: var(--white);
+            visibility: hidden;
+            position: absolute;
+            color: var(--black);
+            padding: 15px;
+            border-radius: 5px;
+            width: 500px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 14px;
+            line-height: 1.5;
+            z-index: 1000;
+            left: auto;
+            right: calc(100% + 15px);
+            top: 770%;
+            transform: translateY(-50%);
+        }
+
+        .chart-info .info-tooltip::before {
+            content: '';
+            position: absolute;
+            top: 6%;
+            left: 100%;
+            transform: translateY(-50%);
+            border-width: 8px;
+            border-style: solid;
+            border-color: transparent transparent transparent var(--gray);
+        }
+
+        .chart-info:hover .info-tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        @media (max-width: 767px) {
+            .chart-info .info-tooltip {
+                right: calc(100% + 15px);  /* Position to the left */
+                left: auto;
+                top: 1000%;
+                transform: translateY(-50%);
+                margin-top: 0;
+                width: calc(100vw - 100px);  /* Slightly narrower to ensure space for arrow */
+                max-width: 300px;
+            }
+
+            .chart-info .info-tooltip::before {
+                left: 100%;  /* Arrow on right side */
+                top: 6%;
+                transform: translateY(-50%);
+                border-color: transparent transparent transparent var(--gray);  /* Arrow points right */
+            }
+
+            /* Adjust info icon position on mobile if needed */
+            .chart-info {
+                top: 15px;
+                right: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-ab-test">
+
+        <div id="chartContainer">
+            <!-- Add this right after your h2 title in the chartContainer -->
+            <div class="chart-info">
+                <span class="help-icon info-icon">?
+                    <div class="info-tooltip">
+                        <h4 style="margin-top: 0;">How to Use This Calculator</h4>
+
+                        <p><strong>Example:</strong> With a 1.5% baseline conversion rate and 8,000 monthly visitors, detecting a 15% uplift (reaching 1.7%) at 95% confidence would take about 3 weeks if you test 2 variants.</p>
+
+                        <p><strong>How Variables Affect Test Duration:</strong></p>
+                        <ul style="padding-left: 15px;">
+                            <li><strong>Conversion Uplift:</strong> The percentage improvement you want to detect. Smaller uplifts (like 5-10%) need longer to validate than larger changes (20%+)</li>
+                            <li><strong>Baseline Rate:</strong> Your current conversion rate - lower rates need longer tests</li>
+                            <li><strong>Confidence Level:</strong> Higher confidence needs longer tests but reduces false positives</li>
+                            <li><strong>Monthly Traffic:</strong> More traffic = faster tests</li>
+                            <li><strong>Variants:</strong> More variants split your traffic, needing longer tests</li>
+                        </ul>
+
+                        <p><strong>Tip:</strong> The graph shows how test duration changes based on your target uplift - bigger improvements can be validated faster!</p>
+                    </div>
+                </span>
+            </div>
+            <canvas id="myChart"></canvas>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label>
+                    Baseline Conversion:
+                    <span class="value-display" id="baselineValue">1.5%</span>
+                    <span class="help-icon">?
+                        <div class="field-tooltip">
+                            Your current conversion rate before starting the test. This is the benchmark against which improvements will be measured.
+                        </div>
+                    </span>
+                </label>
+                <input type="range" id="baseline" min="0.5" max="15" step="0.1" value="1.5" class="slider-progress">
+            </div>
+
+            <div class="control-group">
+                <label>
+                    Confidence Level:
+                    <span class="value-display" id="confidenceValue">95%</span>
+                    <span class="help-icon">?
+                        <div class="field-tooltip">
+                            How certain you want to be about your results. Higher confidence means you're more likely to identify real improvements, though it requires more testing time.
+                        </div>
+                    </span>
+                </label>
+                <input type="range" id="confidence" min="80" max="99" step="1" value="95" class="slider-progress">
+            </div>
+
+            <div class="control-group">
+                <label>
+                    Monthly Traffic:
+                    <span class="value-display" id="trafficValue">6,000</span>
+                    <span class="help-icon">?
+                        <div class="field-tooltip">
+                            The average number of visitors your page receives per month. Higher traffic allows for faster test completion.
+                        </div>
+                    </span>
+                </label>
+                <input type="range" id="traffic" min="1000" max="90000" step="1000" value="8000" class="slider-progress">
+            </div>
+
+            <div class="control-group">
+                <label>
+                    Number of Variants:
+                    <span class="value-display" id="variantsValue">2</span>
+                    <span class="help-icon">?
+                        <div class="field-tooltip">
+                            How many versions you're testing. More variants split your traffic between more options, requiring longer test duration.
+                        </div>
+                    </span>
+                </label>
+                <input type="range" id="variants" min="2" max="5" step="1" value="2" class="slider-progress">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const confidenceLevels = {
+            80: 1.280,
+            81: 1.310,
+            82: 1.340,
+            83: 1.370,
+            84: 1.405,
+            85: 1.440,
+            86: 1.475,
+            87: 1.510,
+            88: 1.555,
+            89: 1.600,
+            90: 1.645,
+            91: 1.695,
+            92: 1.750,
+            93: 1.810,
+            94: 1.880,
+            95: 1.960,
+            96: 2.050,
+            97: 2.170,
+            98: 2.326,
+            99: 2.576
+        };
+
+        function calculateSampleSize(baselineConversion, improvement, confidenceLevel) {
+            const p1 = baselineConversion;
+            const p2 = baselineConversion * (1 + improvement);
+            const zAlpha = confidenceLevels[confidenceLevel];
+            const zBeta = 0.84;
+
+            const n = ((zAlpha * Math.sqrt(2 * p1 * (1 - p1)) +
+                       zBeta * Math.sqrt(p1 * (1 - p1) + p2 * (1 - p2))) ** 2) /
+                     ((p1 - p2) ** 2);
+
+            return Math.ceil(n);
+        }
+
+        for (let e of document.querySelectorAll('input[type="range"]')) {
+            e.classList.add('slider-progress');
+            e.style.setProperty('--value', e.value);
+            e.style.setProperty('--min', e.min == '' ? '0' : e.min);
+            e.style.setProperty('--max', e.max == '' ? '100' : e.max);
+            e.addEventListener('input', () => e.style.setProperty('--value', e.value));
+        }
+
+        const ctx = document.getElementById('myChart').getContext('2d');
+        // Inside the chart options, add these horizontal lines
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: "",
+                datasets: [{
+                    label: 'Test Duration (weeks)',
+                    data: [],
+                    borderColor: '#3A9D43',
+                    borderWidth: 2,
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                aspectRatio: window.matchMedia('(max-width: 767px)').matches ? 1.33 : '',  // Mobile
+                scales: {
+                    x: {
+                        max: window.matchMedia('(max-width: 767px)').matches ? 20 : 26,
+                        title: {
+                            display: true,
+                            text: 'Target Improvement (%)',
+                            color: 'black',
+                            font: {
+                                weight: 'bold',
+                                size: 20  // Optional: adjust size if needed
+                            }
+                        },
+                        grid: {
+                            color: 'black'
+                        },
+                        ticks: {
+                            color: 'black'
+                        }
+                    },
+                    y: {
+                        min: 0,
+                        max: 14,
+                        title: {
+                            display: true,
+                            text: 'Test Duration (weeks)',
+                            color: 'black',
+                            font: {
+                                weight: 'bold',
+                                size: 20  // Optional: adjust size if needed
+                            }
+                        },
+                        grid: {
+                            color: 'rgb(121 122 122, 0.5)'
+                        },
+                        ticks: {
+                            color: 'black'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: 'black',
+                            font: {
+                                size: 14,  // Increase font size
+                                weight: 'bold'  // Make it bold
+                            },
+                            padding: 20  // Add more padding between items if needed
+                        }
+                    }
+                }
+            }
+        });
+
+        function updateChart() {
+            const baseline = parseFloat(document.getElementById('baseline').value) / 100;
+            const confidence = parseInt(document.getElementById('confidence').value);
+            const monthlyTraffic = parseInt(document.getElementById('traffic').value);
+            const variants = parseInt(document.getElementById('variants').value);
+
+            // Update value displays
+            document.getElementById('baselineValue').textContent = (baseline * 100).toFixed(1) + '%';
+            document.getElementById('confidenceValue').textContent = confidence + '%';
+            document.getElementById('trafficValue').textContent = monthlyTraffic.toLocaleString();
+            document.getElementById('variantsValue').textContent = variants;
+
+            // Calculate points
+            const improvements = Array.from({length: 26}, (_, i) => 0.05 + (i * 0.25 / 25));
+            const durations = improvements.map(imp => {
+                const sampleSize = calculateSampleSize(baseline, imp, confidence);
+                return (variants * sampleSize) / monthlyTraffic / 4;
+            });
+
+            // Update chart
+            chart.data.labels = improvements.map(imp => (imp * 100).toFixed(1).replace('.0', '') + '%');
+            chart.data.datasets[0].data = durations;
+            // Update or add reference lines
+            if (chart.data.datasets.length === 1) {
+                // Add reference lines if they don't exist
+                chart.data.datasets.push({
+                    label: '1 week',
+                    data: Array(26).fill(1),
+                    borderColor: 'rgba(255, 0, 0, 0.7)',
+                    borderWidth: 3,
+                    borderDash: [5, 5],
+                    pointRadius: 0,
+                    fill: false
+                }, {
+                    label: '2 weeks',
+                    data: Array(26).fill(2),
+                    borderColor: 'rgba(0, 0, 255, 1)',
+                    borderWidth: 3,
+                    borderDash: [5, 5],
+                    pointRadius: 0,
+                    fill: false
+                }, {
+                    label: '4 weeks',
+                    data: Array(26).fill(4),
+                    borderColor: 'rgba(128, 0, 128, 0.7)',
+                    borderWidth: 3,
+                    borderDash: [5, 5],
+                    pointRadius: 0,
+                    fill: false
+                });
+            }
+            chart.update('none'); // Use 'none' mode for better performance
+        }
+
+        // Add event listeners
+        document.getElementById('baseline').addEventListener('input', updateChart);
+        document.getElementById('confidence').addEventListener('input', updateChart);
+        document.getElementById('traffic').addEventListener('input', updateChart);
+        document.getElementById('variants').addEventListener('input', updateChart);
+
+        // Initial update
+        updateChart();
+
+        // Update aspect ratio when window resizes
+        window.addEventListener('resize', () => {
+            chart.options.aspectRatio = window.matchMedia('(max-width: 767px)').matches ? 1.33 : 2;
+            chart.resize();
+        });
+    </script>
+</body>
+</html>
