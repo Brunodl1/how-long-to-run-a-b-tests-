@@ -5,6 +5,10 @@
     <title>A/B Test Duration Calculator</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        html, body {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
         :root {
             --primary: #1C6E3F;
             --gray: #b0b0b0;
@@ -18,6 +22,7 @@
             color: var(--black);
             overflow-x: hidden;
             position: relative;  /* For the gradient overlay */
+            background-color: black;
         }
 
         .container-ab-test {
@@ -41,12 +46,16 @@
             background: #161616;  /* Changed from var(--white) (#373737) to darker */
             color: var(--black);
             border: 1px solid #434343;
-            border-radius: 5px;
+            border-radius: 15px;
             margin-bottom: 20px;
-            height: 330px;
             box-shadow: none;
             position: relative;
-            overflow: hidden;
+            height: 530px;
+            width: 100%;  /* Ensure full width of the parent */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
         }
 
         #chartContainer::before {
@@ -109,6 +118,46 @@
             bottom: 16%;
             width: 4px;
             height: 35%;  /* Adjust this value to control line length */
+            background: var(--black);  /* Using the primary color, or specify another */
+            border-radius: 2px;
+            z-index: 1;
+        }
+
+        #chartContainer .gradient-background {
+            content: '';
+            position: absolute;
+            width: 100%;  /* Full width of the parent */
+            height: 40%;  /* Full height of the parent */
+            background: radial-gradient(ellipse 70% 40% at 50% 50%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 40%);  /* Adjusted for a regular oval */
+            pointer-events: none;
+            z-index: 0;
+            top: -2000;  /* Position at the top */
+            left: 0;  /* Center horizontally */
+            opacity: 70%;
+            margin-top: -20px
+        }
+
+        #chartContainer .side-gradient-background {
+            content: '';
+            position: absolute;
+            width: 40%;  /* Adjust width as needed */
+            height: 100%;  /* Full height of the parent */
+            background: radial-gradient(ellipse 60% 20% at 50% 50%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 30%);  /* Adjusted for a regular oval */
+            pointer-events: none;
+            z-index: 1;  /* Ensure it appears above other elements */
+            top: -100;  /* Position at the top */
+            left: 0;  /* Position on the left side */
+            margin-left: -15%;
+            opacity: 70%;
+        }
+
+        #chartContainer::after {
+            content: '';
+            position: absolute;
+            left: -0.2%;
+            top: 3%;
+            width: 4px;
+            height: 8%;  /* Adjust this value to control line length */
             background: var(--black);  /* Using the primary color, or specify another */
             border-radius: 2px;
             z-index: 1;
@@ -261,10 +310,9 @@
         }
 
         .chart-info {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            z-index: 2;
+            position: relative;  /* Keep it relative to align properly */
+            z-index: 1;  /* Ensure info is above the gradient */
+            /* Add any additional styling for chart info here */
         }
 
         .info-icon {
@@ -307,6 +355,7 @@
                 align-items: center;
                 flex-direction: column;
                 height: 400px;
+                padding-top:30px;
                 padding-bottom: 30px;
             }
             #chartContainer > h2 {
@@ -400,9 +449,7 @@
             opacity: 1;
         }
 
-        .chart-info {
-            margin-bottom: 20px;
-        }
+
 
         /* Info tooltip (top-right corner) */
         .chart-info .info-tooltip {
@@ -459,27 +506,23 @@
                 transform: translateY(-50%);
                 border-color: transparent transparent transparent var(--gray);  /* Arrow points right */
             }
-
-            /* Adjust info icon position on mobile if needed */
-            .chart-info {
-                top: 15px;
-                right: 15px;
-            }
         }
 
         /* Label container with separator line */
         .control-group label {
             position: relative;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #313131;
+            padding-bottom: 5px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            width: 100%;  /* Added to ensure full width */
-            margin-left: -15px;  /* Compensate for parent padding */
-            margin-right: -15px;  /* Compensate for parent padding */
-            padding-left: 15px;   /* Add back padding for content */
-            padding-right: 15px;  /* Add back padding for content */
+            width: 100%;  /* Ensure full width */
+            box-sizing: border-box;  /* Include padding in width calculation */
+        }
+        .line {
+            height: 1px;
+            border-bottom: 2px solid #313131;  /* This is the line you want to extend */
+            width: calc(100% + 30px);
+            margin-left: -15px;
         }
 
         /* Slider container */
@@ -516,32 +559,60 @@
             width: 100%;
             display: block;
         }
+
+        .chart-title {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            position: relative;
+            font-size: 26px;  /* Adjust font size as needed */
+
+        }
+
+
+
+        .chart-title span {
+            position: relative;
+            z-index: 1;  /* Ensure text is above the gradient */
+            font-size: 20px;  /* Adjust font size as needed */
+            color: var(--black);  /* Use your desired text color */
+        }
+
+        .chartContainer-top {
+            display: flex;
+            justify-content: space-between;  /* Aligns title and chart info */
+            align-items: center;
+            width: 100%;  /* Ensure full width of the parent */
+            padding: 15px 30px;  /* Padding around the container (top/bottom, left/right) */
+            box-sizing: border-box;  /* Include padding in width calculation */
+            border-bottom: 2px solid #313131;
+        }
+
     </style>
 </head>
 <body>
     <div class="container-ab-test">
 
         <div id="chartContainer">
-            <!-- Add this right after your h2 title in the chartContainer -->
-            <div class="chart-info">
-                <span class="help-icon info-icon">?
-                    <div class="info-tooltip">
-                        <h4 style="margin-top: 0;">How to Use This Calculator</h4>
-
-                        <p><strong>Example:</strong> With a 1.5% baseline conversion rate and 8,000 monthly visitors, detecting a 15% uplift (reaching 1.7%) at 95% confidence would take about 3 weeks if you test 2 variants.</p>
-
-                        <p><strong>How Variables Affect Test Duration:</strong></p>
-                        <ul style="padding-left: 15px;">
-                            <li><strong>Conversion Uplift:</strong> The percentage improvement you want to detect. Smaller uplifts (like 5-10%) need longer to validate than larger changes (20%+)</li>
-                            <li><strong>Baseline Rate:</strong> Your current conversion rate - lower rates need longer tests</li>
-                            <li><strong>Confidence Level:</strong> Higher confidence needs longer tests but reduces false positives</li>
-                            <li><strong>Monthly Traffic:</strong> More traffic = faster tests</li>
-                            <li><strong>Variants:</strong> More variants split your traffic, needing longer tests</li>
-                        </ul>
-
-                        <p><strong>Tip:</strong> The graph shows how test duration changes based on your target uplift - bigger improvements can be validated faster!</p>
-                    </div>
-                </span>
+            <div class="chartContainer-top">
+                <div class="side-gradient-background"></div>
+                <div class="gradient-background"></div>
+                <div class="chart-title">Graph Title</div>
+                    <span class="help-icon">?
+                        <div class="field-tooltip">
+                            <h4 style="margin-top: 0;">How to Use This Calculator</h4>
+                            <p><strong>Example:</strong> With a 1.5% baseline conversion rate and 8,000 monthly visitors, detecting a 15% uplift (reaching 1.7%) at 95% confidence would take about 3 weeks if you test 2 variants.</p>
+                            <p><strong>How Variables Affect Test Duration:</strong></p>
+                            <ul style="padding-left: 15px;">
+                                <li><strong>Conversion Uplift:</strong> The percentage improvement you want to detect. Smaller uplifts (like 5-10%) need longer to validate than larger changes (20%+)</li>
+                                <li><strong>Baseline Rate:</strong> Your current conversion rate - lower rates need longer tests</li>
+                                <li><strong>Confidence Level:</strong> Higher confidence needs longer tests but reduces false positives</li>
+                                <li><strong>Monthly Traffic:</strong> More traffic = faster tests</li>
+                                <li><strong>Variants:</strong> More variants split your traffic, needing longer tests</li>
+                            </ul>
+                            <p><strong>Tip:</strong> The graph shows how test duration changes based on your target uplift - bigger improvements can be validated faster!</p>
+                        </div>
+                    </span>
             </div>
             <canvas id="myChart"></canvas>
         </div>
@@ -560,6 +631,7 @@
                         </div>
                     </span>
                 </label>
+                <div class="line"></div>
                 <div class="slider-wrapper">
                     <input type="range" id="baseline" min="0.5" max="15" step="0.1" value="1.5" class="slider-progress">
                 </div>
@@ -578,6 +650,7 @@
                         </div>
                     </span>
                 </label>
+                <div class="line"></div>
                 <div class="slider-wrapper">
                     <input type="range" id="confidence" min="80" max="99" step="1" value="95" class="slider-progress">
                 </div>
@@ -596,6 +669,7 @@
                         </div>
                     </span>
                 </label>
+                <div class="line"></div>
                 <div class="slider-wrapper">
                     <input type="range" id="traffic" min="1000" max="90000" step="1000" value="8000" class="slider-progress">
                 </div>
@@ -614,6 +688,7 @@
                         </div>
                     </span>
                 </label>
+                <div class="line"></div>
                 <div class="slider-wrapper">
                     <input type="range" id="variants" min="2" max="5" step="1" value="2" class="slider-progress">
                 </div>
@@ -682,24 +757,23 @@
             },
             options: {
                 responsive: true,
-                aspectRatio: window.matchMedia('(max-width: 767px)').matches ? 1.33 : '',  // Mobile
+                aspectRatio: window.matchMedia('(max-width: 767px)').matches ? 0.8 : '',  // Mobile
                 layout: {
                     padding: {
-                        left: 20,
-                        right: 20,
-                        top: 20,
-                        bottom: 20
+                        left:  window.matchMedia('(max-width: 767px)').matches ? 5: 20,
+                        right: window.matchMedia('(max-width: 767px)').matches ? 5: 20,
+                        top: window.matchMedia('(max-width: 767px)').matches ? 5: 20,
+                        bottom: window.matchMedia('(max-width: 767px)').matches ? 5: 20,
                     }
                 },
                 scales: {
                     x: {
-                        max: window.matchMedia('(max-width: 767px)').matches ? 20 : 26,
+                        max: window.matchMedia('(max-width: 767px)').matches ? 16 : 26,
                         title: {
                             display: true,
                             text: 'Target Improvement (%)',
                             color: 'White',
                             font: {
-                                weight: 'bold',
                                 size: 20  // Optional: adjust size if needed
                             }
                         },
@@ -716,13 +790,12 @@
                     },
                     y: {
                         min: 0,
-                        max: 14,
+                        max: window.matchMedia('(max-width: 767px)').matches ? 7: 14,
                         title: {
                             display: true,
                             text: 'Test Duration (weeks)',
                             color: 'white',
                             font: {
-                                weight: 'bold',
                                 size: 20  // Optional: adjust size if needed
                             }
                         },
@@ -743,7 +816,7 @@
                         labels: {
                             color: '#ffffff',
                             font: {
-                                size: 14,
+                                size: window.matchMedia('(max-width: 767px)').matches ? 12: 14,
                                 weight: 'bold'
                             },
                             padding: 10  // Add more padding between items if needed
