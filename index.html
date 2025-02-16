@@ -21,6 +21,7 @@
             margin: 0;
             color: var(--black);
             overflow-x: hidden;
+            overflow-y: hidden;
             position: relative;  /* For the gradient overlay */
             background-color: black;
         }
@@ -50,7 +51,7 @@
             margin-bottom: 20px;
             box-shadow: none;
             position: relative;
-            height: 530px;
+            height: 460px;
             width: 100%;  /* Ensure full width of the parent */
             display: flex;
             justify-content: center;
@@ -341,6 +342,13 @@
             border-color: transparent transparent transparent var(--gray);
         }
 
+        @media (min-width: 425px) {
+            #chartContainer {
+               height: 900px;
+            }
+
+        }
+
         /* Desktop styles */
         @media (min-width: 768px) {
             .controls {
@@ -421,7 +429,7 @@
             color: var(--black);
             padding: 10px;
             border-radius: 5px;
-            width: 200px;
+            width: 400px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             opacity: 0;
             transition: opacity 0.3s;
@@ -489,7 +497,22 @@
             opacity: 1;
         }
 
+
+        .chart-title {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            position: relative;
+            font-size: 26px;  /* Adjust font size as needed */
+
+        }
+
+
         @media (max-width: 767px) {
+            .help-icon .field-tooltip {
+                width: 300px;
+
+            }
             .chart-info .info-tooltip {
                 right: calc(100% + 15px);  /* Position to the left */
                 left: auto;
@@ -506,6 +529,19 @@
                 transform: translateY(-50%);
                 border-color: transparent transparent transparent var(--gray);  /* Arrow points right */
             }
+            .chartContainer-top {
+            padding: 15px 30px;  /* Padding around the container (top/bottom, left/right) */
+            }
+
+            .chart-title {
+                width: 100%;
+                display: flex;
+                align-items: center;
+                position: relative;
+                font-size: 20px;  /* Adjust font size as needed */
+            }
+
+
         }
 
         /* Label container with separator line */
@@ -560,14 +596,6 @@
             display: block;
         }
 
-        .chart-title {
-            width: 100%;
-            display: flex;
-            align-items: center;
-            position: relative;
-            font-size: 26px;  /* Adjust font size as needed */
-
-        }
 
 
 
@@ -583,7 +611,7 @@
             justify-content: space-between;  /* Aligns title and chart info */
             align-items: center;
             width: 100%;  /* Ensure full width of the parent */
-            padding: 15px 30px;  /* Padding around the container (top/bottom, left/right) */
+            padding: 5px 10px;  /* Padding around the container (top/bottom, left/right) */
             box-sizing: border-box;  /* Include padding in width calculation */
             border-bottom: 2px solid #313131;
         }
@@ -597,7 +625,7 @@
             <div class="chartContainer-top">
                 <div class="side-gradient-background"></div>
                 <div class="gradient-background"></div>
-                <div class="chart-title">Graph Title</div>
+                <div class="chart-title">Time to Wait for an A/B Test</div>
                     <span class="help-icon">?
                         <div class="field-tooltip">
                             <h4 style="margin-top: 0;">How to Use This Calculator</h4>
@@ -605,10 +633,10 @@
                             <p><strong>How Variables Affect Test Duration:</strong></p>
                             <ul style="padding-left: 15px;">
                                 <li><strong>Conversion Uplift:</strong> The percentage improvement you want to detect. Smaller uplifts (like 5-10%) need longer to validate than larger changes (20%+)</li>
-                                <li><strong>Baseline Rate:</strong> Your current conversion rate - lower rates need longer tests</li>
-                                <li><strong>Confidence Level:</strong> Higher confidence needs longer tests but reduces false positives</li>
-                                <li><strong>Monthly Traffic:</strong> More traffic = faster tests</li>
-                                <li><strong>Variants:</strong> More variants split your traffic, needing longer tests</li>
+                                <br><li><strong>Baseline Rate:</strong> Your current conversion rate - lower rates need longer tests</li>
+                                <br><li><strong>Confidence Level:</strong> Higher confidence needs longer tests but reduces false positives</li>
+                                <br><li><strong>Monthly Traffic:</strong> More traffic = faster tests</li>
+                                <br><li><strong>Variants:</strong> More variants split your traffic, needing longer tests</li>
                             </ul>
                             <p><strong>Tip:</strong> The graph shows how test duration changes based on your target uplift - bigger improvements can be validated faster!</p>
                         </div>
